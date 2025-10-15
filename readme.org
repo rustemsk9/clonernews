@@ -1,0 +1,81 @@
+** Instructions
+| id | Instructions | Tip                              | todo |
+|----|--------------|----------------------------------|------|
+| 1  | [[https://github.com/HackerNews/API?tab=readme-ov-file][Api HackerNews]]               | - | - |
+| 2  | Must include : Posts with Stories/Jobs/Polls/ and Comments/with Correct parentPost/ | - | - |
+| 3  | Ordered by newest post to oldest | - | - |
+| 4  | Keep updated, inform users of changes | - | - |
+| 5  | Create a section that presents the newest posts | - | - |
+| 6  | Use caching to reduce API calls and | - | - |
+
+*** DONE 1 
+*** TODO 2 
+*** TODO 3 
+*** TODO 4 
+*** TODO 5 
+*** TODO 6
+
+** Best ways to avoid rate limiting:
+optimize your code to eliminate any unnecessary requests
+usage of throttling/debouncing functions/techniques to regulate the number of requests.
+
+** Optional: 
+You can Handle sub-commments for stories, jobs and polls, by implementing nested comments.
+
+** Live Data
+The coolest part of Firebase is its support for change notifications. While you can subscribe to individual items and profiles, you'll need to use the following to observe front page ranking, new items, and new profiles.
+
+** AI instructions
+firebase has support for change notifications, but do i understand correctly, my js project cannot access it right away, i need profile or subscribe function for this?
+
+You're correct in your understanding! Firebase change notifications (also known as real-time listeners) do require you to set up listeners or subscriptions in your JavaScript code - they don't automatically push changes to your application.
+
+Here's how it works:
+
+** Firebase Real-time Database
+For the Realtime Database, you use `.on()` to subscribe to changes:
+
+#+BEGIN_SRC javascript
+import { ref, onValue } from 'firebase/database';
+
+const db = getDatabase();
+const dataRef = ref(db, 'path/to/data');
+
+// Subscribe to changes
+const unsubscribe = onValue(dataRef, (snapshot) => {
+  const data = snapshot.val();
+  console.log('Data changed:', data);
+});
+
+// Unsubscribe when done
+// unsubscribe();
+#+END_SRC
+
+** Cloud Firestore
+For Firestore, you use `onSnapshot()` to listen for changes:
+#+BEGIN_SRC javascript
+
+import { doc, onSnapshot } from 'firebase/firestore';
+
+const db = getFirestore();
+const docRef = doc(db, 'collection', 'document');
+
+// Subscribe to document changes
+const unsubscribe = onSnapshot(docRef, (doc) => {
+  console.log('Document data:', doc.data());
+});
+
+// Unsubscribe when done
+// unsubscribe();
+#+END_SRC
+
+** Key Points:
+
+1. **Active Subscription Required**: You must explicitly set up listeners in your code
+2. **Not Automatic**: Firebase doesn't push changes without your code requesting them
+3. **Persistent Connection**: These listeners maintain a persistent connection to Firebase
+4. **Cleanup Important**: Always unsubscribe when components unmount to avoid memory leaks
+5. **Real-time**: Once subscribed, you get instant updates when data changes
+
+So yes, you need to implement subscription/listener functions in your JavaScript code to receive Firebase's real-time updates. The changes don't just appear in your app automatically.
+
