@@ -1,0 +1,27 @@
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, onValue } from 'firebase/database';
+
+// Initialize Firebase (no auth needed for HN API)
+const firebaseConfig = {
+  databaseURL: "https://hacker-news.firebaseio.com"
+};
+
+// initial website https://github.com/HackerNews/API#live-data
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Listen to top stories changes
+const topStoriesRef = ref(db, 'v0/topstories');
+onValue(topStoriesRef, (snapshot) => {
+  const topStories = snapshot.val();
+  console.log('Top stories updated:', topStories);
+});
+
+// Listen to a specific item
+const itemRef = ref(db, 'v0/item/12345');
+onValue(itemRef, (snapshot) => {
+  const item = snapshot.val();
+  console.log('Item updated:', item);
+});
+
