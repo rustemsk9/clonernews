@@ -1,0 +1,56 @@
+// StoryCard Component - Reusable story card UI
+import Component from './Component.js';
+import { formatDate, extractDomain, sanitizeHTML } from '../utils/helpers.js';
+
+export default class StoryCard extends Component {
+    render() {
+        const { story, rank, showText = false } = this.props;
+        
+        if (!story) {
+            return '';
+        }
+        
+        const domain = extractDomain(story.url);
+        const timeAgo = formatDate(story.time);
+        const commentCount = story.descendants || 0;
+        const score = story.score || 0;
+        
+        return `
+            <li class="story-item" data-id="${story.id}">
+                ${rank ? `<span class="story-rank">${rank}.</span>` : ''}
+                <div class="story-content">
+                    <div class="story-title">
+                        ${story.url ? `
+                            <a href="${story.url}" target="_blank" rel="noopener noreferrer">
+                                ${sanitizeHTML(story.title || 'Untitled')}
+                            </a>
+                            ${domain ? `<span class="story-domain">(${domain})</span>` : ''}
+                        ` : `
+                            <a href="#/item/${story.id}">
+                                ${sanitizeHTML(story.title || 'Untitled')}
+                            </a>
+                        `}
+                    </div>
+                    
+                    ${showText && story.text ? `
+                        <div class="story-text" style="
+                            font-size: 9pt;
+                            color: #828282;
+                            margin-top: 6px;
+                            line-height: 1.4;
+                        ">
+                            ${story.text.substring(0, 200)}${story.text.length > 200 ? '...' : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="story-meta">
+                        <span>${score} point${score !== 1 ? 's' : ''}</span>
+                        <span>by <a href="#/user/${story.by}">${story.by || 'unknown'}</a></span>
+                        <span><a href="#/item/${story.id}">${timeAgo}</a></span>
+                        <span><a href="#/item/${story.id}">${commentCount} comment${commentCount !== 1 ? 's' : ''}</a></span>
+                    </div>
+                </div>
+            </li>
+        `;
+    }
+}

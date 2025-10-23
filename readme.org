@@ -15,6 +15,22 @@
 *** TODO 5 
 *** TODO 6
 
+max : https://hacker-news.firebaseio.com/v0/item/45684462.json?print=pretty
+
+EXAMPLES 
+
+{
+  "by" : "billpg",
+  "descendants" : 30,
+  "id" : 45595807,
+  "kids" : [ 45638206, 45595888, 45681750, 45683697, 45681119, 45683104, 45683859, 45595819, 45682162, 45681139, 45681957 ],
+  "score" : 109,
+  "text" : "I&#x27;m looking for copies of these issues of <i>PC Plus</i> magazine please.<p>1991-Nov, 1992-Jan, 1992-Mar, 1992-Apr, 1992-Jun, 1992-Jul, 1992-Oct, 1993-Jan.<p>This was a popular PC magazine in the UK, and one of its highlights was Wilf’s Programmer Workshop, a regular column full of programming puzzles, challenges and reader submissions.<p>At one point, he ran a contest around quines (programs that output their own source). I sent in a tongue‑in‑cheek entry, a batch file that used PKZIP to “compile” code into PKZIP.OBJ (instead of .ZIP) and then ZIP2EXE to “link” it into an EXE. The result was an executable that unzipped itself back into a source file. He was amused enough to mention it near the end of his column, though he noted it didn’t quite qualify for the contest since I hadn’t written PKZIP myself.<p>I found scans of his section on archive.org, including the issue where he announces the contest, but I couldn&#x27;t find my particular contribution. I&#x27;ve narrowed it down to the eight issues listed above that are in the right time-frame.<p>If you have any of these issues (paper or PDF), could you please check Wilf’s section near the back and see if my submission is mentioned?<p>Thanks!",
+  "time" : 1760549117,
+  "title" : "Ask HN: Does anyone have scans of these missing PC Plus issues (1991–1993)?",
+  "type" : "story"
+}
+
 ** Best ways to avoid rate limiting:
 optimize your code to eliminate any unnecessary requests
 usage of throttling/debouncing functions/techniques to regulate the number of requests.

@@ -1,0 +1,19 @@
+api project, that fetches data from such website
+https://hacker-news.firebaseio.com/v0/item/45684462.json?print=pretty
+each item/id.json is data either comment story etc.
+i provided you data file.
+
+im thinking of website UI design, and since i got some new skills in debounce() throttle() promise() promise race()
+promise all () data templating for visualisations. i provded possible-wxample-workers. which i want to integrate in this project.
+
+possibly make Promises more secure, by checking the length of data it provdes and calculating bytes we received before ever using it.
+
+for the first step, i want a html, with ready boxes and styles. but its tricky. i have web/index.html and index.js for base initialisations. and i have web/src/views/*js files and i want them more, so i learn connecting more modules.
+
+i wonder what combined views and htmls would look like as base, by preparing empty tables containers polls. content of view maybe. i have project made before that uses the same views and models. but for now lets 
+
+-------------------------------------------------------------
+
+
+now im thinking of creating modules, so that each view .js file will look up correct container in html by querySelector and provide data. but first i need information what this asynchronous/syncronous load would/should look like. like im initialising index.js, i have route(), i understand i need to add more routes for view all secitons. and seperating layer of each route from main index, if you know any exploits of such behaviour, i would more likely follow them. 
+In this step let me know what approach you would have prefered for AbstractView extending for subclasses, and at the same time utilising them all together for better overall web productivity. i understand loading multiple data layers is possible. for example fetching items using only 1 promise, to build one or two blocks of container in our html. but we need only partial view of those data in index, because we are going to view all of them seperately in either subclass views or totally seperate pages. but i think subclass that utilize same data would work better, since no need to re fetch all the stuff.. as in javascript productive view, and even javascript module blocks and one app data manipulation edge, what approach would you prefer?

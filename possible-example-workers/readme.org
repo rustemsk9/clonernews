@@ -1,0 +1,37 @@
+
+https://mrseanbaines.medium.com/5-vs-code-extensions-to-make-you-a-more-efficient-and-happy-developer-ab917bfdb791
+
+node test.mjs ./test debounce
+
+Please answer with code inside #+BEGIN_SRC javascript and #+END_SRC blocks.
+
+Yes, `node.dataset.foundation = 'true'` is the beginning of setting custom data attributes (HTML5 data attributes) on DOM elements in JavaScript.
+
+- `node.dataset.foundation = 'true'` sets the attribute `data-foundation="true"` on the element.
+- The `dataset` property is a convenient way to get and set `data-*` attributes.
+
+** Example:
+~```javascript
+brick.dataset.foundation = 'true';
+```
+Results in:
+```html
+<div data-foundation="true"></div>
+```
+~
+This is the standard way to set custom data attributes in modern JavaScript.
+
+#+BEGIN_SRC javascript 
+// Setting a data attribute 
+element.dataset.key = 'value'; // sets data-key="value"
+
+// Getting a data attribute 
+let value = element.dataset.key; // gets the value of data-key
+
+// Example: 
+const div = document.createElement('div'); 
+div.dataset.example = 'hello'; 
+// <div data-example="hello"></div> 
+console.log(div.dataset.example); // "hello"
+#+END_SRC
+
