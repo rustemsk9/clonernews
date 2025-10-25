@@ -56,6 +56,41 @@ export default class extends AbstractView {
                 />
             </div>
 
+            <!-- Debug Console Output -->
+            <div id="debug-console" class="debug-console" style="
+                background: #f8f8f8;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 10px;
+                margin: 10px 0;
+                font-family: monospace;
+                font-size: 9pt;
+                max-height: 200px;
+                overflow-y: auto;
+                display: block;
+            ">
+                <div style="font-weight: bold; margin-bottom: 5px;">🐛 Debug Console</div>
+                <div id="debug-output">Console output will appear here...</div>
+            </div>
+            
+            <!-- Freshest Loads Section -->
+            <div id="freshest-loads" class="freshest-loads" style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 6px;
+                padding: 15px;
+                margin: 10px 0;
+                display: none;
+            ">
+                <div class="section-header" style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 15px;">
+                    <h2 style="color: white; margin: 0;">🔥 Freshest Stories (Max ID Discovery)</h2>
+                    <span class="view-more" style="color: rgba(255,255,255,0.8);">Live from HN →</span>
+                </div>
+                <ul class="story-list" id="freshest-story-list" style="background: rgba(255,255,255,0.1); border-radius: 4px; padding: 10px;">
+                    <li class="story-item loading" style="color: rgba(255,255,255,0.8);">No fresh stories loaded yet</li>
+                </ul>
+            </div>
+
             <!-- Tabs Navigation -->
             <div class="tabs">
                 <div class="tab active" data-tab="top">Top Stories</div>
@@ -152,25 +187,30 @@ export default class extends AbstractView {
 
     async init() {
         console.log("🚀 HomeView initialized with DataManager");
+        this.debugLog("🚀 HomeView initialized with DataManager");
         
         // Subscribe to DataManager events
         this.subscribeToData('stories-updated', (data) => {
             console.log('📢 Stories updated event received:', data.type);
+            this.debugLog('📢 Stories updated event received:', data.type);
             this.updateCacheStats();
         });
         
         this.subscribeToData('stats-updated', (stats) => {
             console.log('📢 Stats updated:', stats);
+            this.debugLog('📢 Stats updated:', stats);
             this.renderStats(stats);
         });
         
         this.subscribeToData('recent-items-loaded', (data) => {
             console.log('📢 Recent items loaded from max ID:', data);
+            this.debugLog('📢 Recent items loaded from max ID:', data);
             this.updateCacheStats();
         });
         
         this.subscribeToData('stories-discovered', (data) => {
             console.log('📢 Stories discovered:', data);
+            this.debugLog('📢 Stories discovered from ' + data.source);
             if (data.source === 'max-id-walk') {
                 this.renderStats({
                     totalStories: data.stories.length,
@@ -183,10 +223,12 @@ export default class extends AbstractView {
         
         this.subscribeToData('new-items-detected', (items) => {
             console.log('🆕 New items detected in live stream!', items);
+            this.debugLog(`🆕 ${items.length} new items detected in live stream!`);
             this.showNewItemsNotification(items.length);
         });
         
         // Set up event listeners
+        this.debugLog("🔧 Setting up event listeners...");
         this.setupTabSwitching();
         this.setupSearch();
         this.setupRefreshButton();
@@ -194,10 +236,12 @@ export default class extends AbstractView {
         this.setupMaxItemFeatures();
         
         // Load initial data using Promise.all for dashboard
+        this.debugLog("📊 Loading dashboard data...");
         await this.loadDashboard();
         
         // Update cache stats
         this.updateCacheStats();
+        this.debugLog("✅ HomeView initialization complete");
         
         // Optionally: Discover very recent stories from max ID
         // Uncomment to use max-id discovery instead of API
@@ -317,13 +361,20 @@ export default class extends AbstractView {
     }
     
     renderStories(stories) {
+        console.log('🔍 DEBUG - renderStories called with:', stories);
+        console.log('🔍 DEBUG - Type:', typeof stories);
+        console.log('🔍 DEBUG - Is array?', Array.isArray(stories));
+        
         if (!stories || stories.length === 0) {
             this.updateElement('#story-list', this.showEmpty('No stories available'));
             return;
         }
         
         const storiesHTML = stories.map((story, index) => {
-            return this.storyCard.render({ story, rank: index + 1 });
+            console.log('🔍 DEBUG - Processing story:', story);
+            // Create a new StoryCard instance with props for each story
+            const storyCard = new StoryCard({ story, rank: index + 1 });
+            return storyCard.render();
         }).join('');
         
         this.updateElement('#story-list', storiesHTML);
@@ -532,34 +583,40 @@ export default class extends AbstractView {
         }
     }
     
-    async loadRecentStoriesFromMaxId() {
+    async loadRecentStoriesFromMaxId() { //frommaxid
         try {
             const resultsDiv = this.$('#max-item-results');
             if (resultsDiv) {
                 resultsDiv.innerHTML = '⏳ Discovering stories by walking backwards from max ID...';
             }
             
-            // Show skeleton
-            this.renderSkeletonStories();
+            // Show freshest loads section
+            this.showFreshestLoads();
+            this.debugLog('🔍 Starting Max ID discovery...');
+            
+            // Show skeleton in freshest section
+            this.updateElement('#freshest-story-list', this.getSkeletonLoader(5));
             
             // Discover stories
             const stories = await this.data.discoverRecentStories(30);
             
-            // Render them
-            this.renderStories(stories);
+            // Debug output
+            this.debugLog(`✅ Discovered ${stories.length} stories from max ID walk`);
+            this.debugLog(`� Stories data:`, stories);
+            
+            // Render them in freshest loads section (not main tabs)
+            this.renderFreshestStories(stories);
             
             if (resultsDiv) {
                 resultsDiv.innerHTML = `
                     ✅ Discovered <strong>${stories.length}</strong> recent stories from max ID walk<br>
-                    Showing freshest content available!
+                    Showing freshest content available in dedicated section!
                 `;
             }
-            
-            // Update title
-            this.updateElement('#stories-title', '🔥 Freshest Stories (Max ID Discovery)');
-            
+        
         } catch (error) {
             console.error('Error discovering stories:', error);
+            this.debugLog('❌ Error discovering stories:', error.message);
             const resultsDiv = this.$('#max-item-results');
             if (resultsDiv) {
                 resultsDiv.innerHTML = '❌ Failed to discover stories';
@@ -638,9 +695,8 @@ export default class extends AbstractView {
             banner.remove();
             await this.loadRecentStoriesFromMaxId();
         });
-        
         document.body.appendChild(banner);
-        
+        this.loadRecentStoriesFromMaxId();
         // Auto-hide after 10 seconds
         setTimeout(() => {
             if (banner && banner.parentNode) {
@@ -648,6 +704,75 @@ export default class extends AbstractView {
                 setTimeout(() => banner.remove(), 300);
             }
         }, 10000);
+    }
+    
+    // ============ FRESHEST LOADS & DEBUG HELPERS ============
+    
+    showFreshestLoads() {
+        const freshestSection = this.$('#freshest-loads');
+        const debugConsole = this.$('#debug-console');
+        
+        if (freshestSection) {
+            freshestSection.style.display = 'block';
+        }
+        if (debugConsole) {
+            debugConsole.style.display = 'block';
+        }
+    }
+    
+    renderFreshestStories(stories) {
+        if (!stories || stories.length === 0) {
+            this.updateElement('#freshest-story-list', '<li class="story-item" style="color: rgba(255,255,255,0.8);">No fresh stories found</li>');
+            return;
+        }
+        
+        const storiesHTML = stories.map((story, index) => {
+            // Create a new StoryCard instance with props for each story
+            const storyCard = new StoryCard({ story, rank: index + 1 });
+            return storyCard.render();
+        }).join('');
+        
+        this.updateElement('#freshest-story-list', storiesHTML);
+        this.debugLog(`🎨 Rendered ${stories.length} fresh stories in dedicated section`);
+    }
+    
+    debugLog(message, data = null) {
+        // Log to console as usual
+        if (data) {
+            console.log(message, data);
+        } else {
+            console.log(message);
+        }
+        
+        // Also log to debug console in HTML
+        const debugOutput = this.$('#debug-output');
+        if (debugOutput) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.cssText = 'margin: 2px 0; padding: 2px 0; border-bottom: 1px solid #eee;';
+            
+            if (data) {
+                logEntry.innerHTML = `
+                    <span style="color: #666;">[${timestamp}]</span> ${message}
+                    <details style="margin-top: 2px;">
+                        <summary style="cursor: pointer; color: #0066cc;">View Data</summary>
+                        <pre style="background: #f0f0f0; padding: 5px; margin: 5px 0; overflow-x: auto; font-size: 8pt;">${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                `;
+            } else {
+                logEntry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${message}`;
+            }
+            
+            debugOutput.appendChild(logEntry);
+            
+            // Auto-scroll to bottom
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            
+            // Limit to last 50 entries to prevent memory issues
+            while (debugOutput.children.length > 50) {
+                debugOutput.removeChild(debugOutput.firstChild);
+            }
+        }
     }
     
     // ============ PROGRESSIVE ENHANCEMENT ============

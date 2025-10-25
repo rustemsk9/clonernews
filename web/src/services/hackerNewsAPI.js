@@ -2,11 +2,9 @@
 import { fetchJSON, fetchAll, validateData, DataCache, retryWithBackoff } from '../utils/helpers.js';
 
 const BASE_URL = 'https://hacker-news.firebaseio.com/v0';
-const cache = new DataCache(300000); // 5 minute cache
+const cache = new DataCache(600000); // 10 minute cache
 
-/**
- * Get item by ID (story, comment, job, poll, or pollopt)
- */
+//  * Get item by ID (story, comment, job, poll, or pollopt)
 export async function getItem(id) {
     const cacheKey = `item_${id}`;
     const cached = cache.get(cacheKey);

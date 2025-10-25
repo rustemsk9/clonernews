@@ -1,5 +1,5 @@
 import NavBarView from "./src/views/NavBarView.js";
-import Home from "./src/views/HomeView.js";
+import HomeView from "./src/views/HomeView.js";
 import FooterView from "./src/views/FooterView.js";
 
 // Global state
@@ -7,7 +7,7 @@ let currentView = null;
 
 const router = async() => {
     const routes = [
-        { path: "/", view: Home },
+        { path: "/", view: HomeView },
         // Add more routes here as you create new views
         // { path: "/item/:id", view: StoryDetailView },
         // { path: "/user/:username", view: UserView },

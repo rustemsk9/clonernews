@@ -43,7 +43,7 @@ export async function fetchJSON(url) {
         
         // Check content length for security
         const contentLength = response.headers.get('content-length');
-        if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) { // 10MB limit
+        if (contentLength && parseInt(contentLength) > 0.1 * 1024 * 1024) { // 0.1MB limit
             throw new Error('Response too large');
         }
         

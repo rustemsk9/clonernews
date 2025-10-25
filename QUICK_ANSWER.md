@@ -258,10 +258,10 @@ await this.data.getStories('top', 100);
 await data.getStories('top');  // Fetches from API
 
 // Navigate to ListView
-await data.getStories('top');  // Returns from cache (instant!)
+await data.getStories('new');  // Returns from cache (instant!)
 
 // Back to HomeView
-await data.getStories('top');  // Still cached (instant!)
+await data.getStories('jobs');  // Still cached (instant!)
 ```
 
 ### Concern 4: "JavaScript module blocks and data manipulation"

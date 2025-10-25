@@ -58,7 +58,7 @@ class DataManager {
     
     // ============ STORIES LOADING ============
     
-    async getStories(type = 'top', limit = 30, forceRefresh = false) {
+    async getStories(type = 'top', limit = 10, forceRefresh = false) {
         const cacheKey = `stories-${type}`;
         
         // Return cached if available and not forcing refresh
@@ -210,7 +210,7 @@ class DataManager {
     
     // ============ COMMENTS LOADING ============
     
-    async getComments(storyId, limit = 20) {
+    async getComments(storyId, limit = 5) {
         try {
             // Get story first (might be cached)
             const story = await this.getItem(storyId);
@@ -316,8 +316,12 @@ class DataManager {
         
         try {
             const [topStories, jobs, stats] = await Promise.all([
-                this.getStories('top', 10),
-                this.getStories('jobs', 5),
+                this.getStories('top', 10, true),
+                this.getStories('new', 5, true),
+                this.getStories('best', 5, true),
+                this.getStories('ask', 5, true),
+                this.getStories('show', 5, true),
+                this.getStories('jobs', 5, true),
                 Promise.resolve(this.getStats())
             ]);
             
@@ -474,7 +478,7 @@ class DataManager {
      * Discover recent stories by walking backwards from max ID
      * More reliable than API endpoints for very fresh content
      */
-    async discoverRecentStories(count = 30) {
+    async discoverRecentStories(count = 5) {
         try {
             console.log(`🔍 Discovering ${count} recent stories from max ID...`);
             
