@@ -116,28 +116,36 @@ export default class ListView extends AbstractView {
         try {
             console.log(`📚 Loading page ${this.currentPage + 1} of ${this.type} stories...`);
             
-            // For first load, get initial batch
-            // For subsequent loads, get 15 more stories
-            const limit = this.currentPage === 0 ? this.storiesPerPage : 15;
+            // Calculate how many stories we need total
+            const storiesNeeded = this.currentPage === 0 ? this.storiesPerPage : this.allStories.length + 15;
             
             // Fetch stories from DataManager
-            const newStories = await this.data.getStories(this.type, limit * (this.currentPage + 1), false);
+            const allStories = await this.data.getStories(this.type, storiesNeeded, false);
             
             // Get only the new stories (skip already loaded ones)
             const startIndex = this.allStories.length;
-            const freshStories = newStories.slice(startIndex);
+            const freshStories = allStories.slice(startIndex);
             
             // Add to our collection
-            this.allStories.push(...freshStories);
-            this.currentPage++;
-            
-            // Render stories
-            this.renderAllStories();
-            
-            // Update stats
-            this.updateStats();
-            
-            console.log(`✅ Loaded ${freshStories.length} new stories, total: ${this.allStories.length}`);
+            if (freshStories.length > 0) {
+                this.allStories.push(...freshStories);
+                this.currentPage++;
+                
+                // Render stories
+                this.renderAllStories();
+                
+                // Update stats
+                this.updateStats();
+                
+                console.log(`✅ Loaded ${freshStories.length} new stories, total: ${this.allStories.length}`);
+            } else {
+                console.log('📭 No more stories available');
+                // Hide load more button if no more stories
+                const loadMoreContainer = this.$('#load-more-container');
+                if (loadMoreContainer) {
+                    loadMoreContainer.style.display = 'none';
+                }
+            }
             
         } catch (error) {
             console.error(`❌ Error loading ${this.type} stories:`, error);
@@ -169,7 +177,8 @@ export default class ListView extends AbstractView {
     }
 
     setupInfiniteScroll() {
-        window.addEventListener('scroll', () => {
+        // Store reference to scroll handler for cleanup
+        this.scrollHandler = () => {
             // Check if user scrolled near bottom
             const scrollPosition = window.scrollY + window.innerHeight;
             const documentHeight = document.documentElement.scrollHeight;
@@ -177,7 +186,21 @@ export default class ListView extends AbstractView {
             if (scrollPosition >= documentHeight - 200 && !this.loading) {
                 this.loadMoreStoriesScroll();
             }
-        });
+        };
+        
+        window.addEventListener('scroll', this.scrollHandler);
+    }
+    
+    // Override unmount to clean up scroll listener
+    unmount() {
+        if (this.scrollHandler) {
+            window.removeEventListener('scroll', this.scrollHandler);
+            this.scrollHandler = null;
+            console.log('🧹 ListView scroll listener removed');
+        }
+        
+        // Call parent unmount
+        super.unmount();
     }
     
     // Load 10 more stories on scroll

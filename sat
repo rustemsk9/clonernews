@@ -1,0 +1,42 @@
+https://hacker-news.firebaseio.com/v0/topstories.json?orderBy=%22$key%22&limitToFirst=10
+
+Type: object
+Structure: Object with keys: url, status, data
+Keys: url, status, data
+Sample:
+{
+  "url": "https://hacker-news.firebaseio.com/v0/maxitem.json?timeout=5s",
+  "status": 200,
+  "data": 45704020
+}
+
+Type: object
+Structure: Object with keys: url, status, data
+Keys: url, status, data
+Sample:
+{
+  "url": "https://hacker-news.firebaseio.com/v0/topstories.json?shallow=true",
+  "status": 200,
+  "data": {
+    "0": true,
+    "1": true,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": true,
+    "6": true,
+    "7": true...
+
+Type: object
+Structure: Object with keys: url, status, data
+Keys: url, status, data
+Sample:
+{
+  "url": "https://hacker-news.firebaseio.com/v0/topstories.json?orderBy=\"$key\"",
+  "status": 200,
+  "data": [
+    45703716,
+    45702558,
+    45703556,
+    45702877,
+    45695134...

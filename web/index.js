@@ -66,6 +66,8 @@ const router = async() => {
     const viewParams = match.result.section ? match.result : (match.route.params || match.result);
     const pageView = new match.route.view(viewParams);
     currentView = pageView;
+    
+    console.log(`🎯 Loading view: ${match.route.view.name} for path: ${location.pathname}`);
 
     // Render static components (navbar and footer)
     const navBarView = new NavBarView()

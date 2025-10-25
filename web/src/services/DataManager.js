@@ -594,6 +594,74 @@ class DataManager {
         };
     }
     
+    // ============ POLLS SUPPORT ============
+    
+    /**
+     * Find recent polls from cached items or by searching recent items
+     */
+    async getRecentPolls(limit = 3) {
+        try {
+            console.log(`🗳️ Looking for recent polls...`);
+            
+            // First check cached items for polls
+            const cachedPolls = [];
+            for (const [id, item] of this.data.items) {
+                if (item && item.type === 'poll' && !item.deleted && !item.dead) {
+                    cachedPolls.push(item);
+                }
+            }
+            
+            // Sort by time and take most recent
+            cachedPolls.sort((a, b) => (b.time || 0) - (a.time || 0));
+            
+            if (cachedPolls.length >= limit) {
+                console.log(`✅ Found ${cachedPolls.length} polls in cache`);
+                return cachedPolls.slice(0, limit);
+            }
+            
+            // If not enough in cache, search recent items
+            console.log(`🔍 Searching recent items for polls...`);
+            const recentItems = await this.loadRecentItems(200);
+            const foundPolls = recentItems.byType.polls || [];
+            
+            console.log(`✅ Found ${foundPolls.length} recent polls`);
+            return foundPolls.slice(0, limit);
+            
+        } catch (error) {
+            console.error('❌ Error loading recent polls:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Get poll options for a poll
+     */
+    async getPollOptions(pollId) {
+        try {
+            const poll = await this.getItem(pollId);
+            if (!poll || poll.type !== 'poll' || !poll.parts) {
+                return [];
+            }
+            
+            console.log(`🗳️ Loading ${poll.parts.length} poll options for poll ${pollId}...`);
+            
+            // Load all poll options
+            const options = await this.getMultipleItems(poll.parts);
+            
+            // Filter valid options and sort by score
+            const validOptions = options
+                .filter(opt => opt && opt.type === 'pollopt' && !opt.deleted && !opt.dead)
+                .sort((a, b) => (b.score || 0) - (a.score || 0));
+            
+            console.log(`✅ Loaded ${validOptions.length} poll options`);
+            return validOptions;
+            
+        } catch (error) {
+            console.error(`❌ Error loading poll options for ${pollId}:`, error);
+            return [];
+        }
+    }
+    
     // ============ DEBUGGING ============
     
     getDebugInfo() {

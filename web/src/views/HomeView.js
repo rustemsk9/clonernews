@@ -1,5 +1,7 @@
 import AbstractView from "./AbstractView.js";
 import StoryCard from "../components/StoryCard.js";
+import PollCard from "../components/PollCard.js";
+import APIExplorer from "../utils/APIExplorer.js";
 import { debounce } from "../utils/helpers.js";
 
 export default class extends AbstractView {
@@ -8,6 +10,7 @@ export default class extends AbstractView {
         this.setTitle("ClonerNews - Hacker News Clone");
         this.currentTab = 'top';
         this.storyCard = new StoryCard();
+        this.pollCard = new PollCard();
         this.liveStreamStop = null;  // Track live stream
     }
     
@@ -71,6 +74,107 @@ export default class extends AbstractView {
             ">
                 <div style="font-weight: bold; margin-bottom: 5px;">🐛 Debug Console</div>
                 <div id="debug-output">Console output will appear here...</div>
+            </div>
+            
+            <!-- API Explorer Section -->
+            <div id="api-explorer" class="api-explorer" style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 6px;
+                padding: 15px;
+                margin: 10px 0;
+                display: none;
+            ">
+                <div class="section-header" style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 15px;">
+                    <h2 style="color: white; margin: 0; font-size: 14pt;">🔍 API Explorer</h2>
+                    <span style="color: rgba(255,255,255,0.8); font-size: 9pt;">Discover hidden HN endpoints</span>
+                </div>
+                
+                <div class="explorer-controls" style="margin-bottom: 15px;">
+                    <button id="explore-basic-btn" style="
+                        background: rgba(255,255,255,0.2);
+                        color: white;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 9pt;
+                        margin-right: 8px;
+                        margin-bottom: 5px;
+                    ">Basic Endpoints</button>
+                    
+                    <button id="explore-hidden-btn" style="
+                        background: rgba(255,255,255,0.2);
+                        color: white;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 9pt;
+                        margin-right: 8px;
+                        margin-bottom: 5px;
+                    ">Hidden Endpoints</button>
+                    
+                    <button id="explore-firebase-btn" style="
+                        background: rgba(255,255,255,0.2);
+                        color: white;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 9pt;
+                        margin-right: 8px;
+                        margin-bottom: 5px;
+                    ">Firebase Endpoints</button>
+                    
+                    <button id="analyze-patterns-btn" style="
+                        background: rgba(255,255,255,0.2);
+                        color: white;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 9pt;
+                        margin-right: 8px;
+                        margin-bottom: 5px;
+                    ">Analyze Patterns</button>
+                    
+                    <button id="explore-functions-btn" style="
+                        background: rgba(255,255,255,0.2);
+                        color: white;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 9pt;
+                        margin-right: 8px;
+                        margin-bottom: 5px;
+                    ">Function Types</button>
+                    
+                    <button id="clear-explorer-btn" style="
+                        background: rgba(255,0,0,0.3);
+                        color: white;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 9pt;
+                        margin-bottom: 5px;
+                    ">Clear</button>
+                </div>
+                
+                <div id="api-stream" style="
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 4px;
+                    padding: 10px;
+                    max-height: 400px;
+                    overflow-y: auto;
+                    font-family: monospace;
+                    font-size: 8pt;
+                    line-height: 1.4;
+                ">
+                    <div style="color: rgba(255,255,255,0.7);">API exploration results will stream here...</div>
+                </div>
             </div>
             
             <!-- Freshest Loads Section -->
@@ -313,6 +417,7 @@ export default class extends AbstractView {
         this.setupRefreshButton();
         this.setupDebugToggle();
         this.setupMaxItemFeatures();
+        this.setupAPIExplorer();
         
         // Load initial data using Promise.all for dashboard
         this.debugLog("📊 Loading dashboard data...");
@@ -374,10 +479,15 @@ export default class extends AbstractView {
             // Render stats
             this.renderStats(dashboardData.stats);
             
+            // Load and render polls
             // Load comments from first story
-            if (dashboardData.topStories.length > 0) {
-                this.loadRecentComments(dashboardData.topStories[0].id);
-            }
+            // if (dashboardData.topStories.length > 0) {
+            this.loadRecentComments(dashboardData.newStories[0].id);
+            // }
+
+            this.loadPolls();
+            
+            // Don't load comments on dashboard - only load when viewing individual stories
             
         } catch (error) {
             console.error('❌ Error loading dashboard:', error);
@@ -424,6 +534,36 @@ export default class extends AbstractView {
             this.updateElement('#story-list', `
                 <li class="story-item error">Failed to load stories</li>
             `);
+        }
+    }
+    
+    async loadPolls() {
+        try {
+            console.log('🗳️ Loading recent polls...');
+            
+            // Get recent polls
+            const polls = await this.data.getRecentPolls(1);
+            
+            if (polls.length === 0) {
+                this.updateElement('#poll-container', '<div style="color: #666; text-align: center; padding: 20px; font-size: 9pt;">No recent polls found</div>');
+                return;
+            }
+            
+            const poll = polls[0];
+            console.log(`📊 Rendering poll: ${poll.title}`);
+            
+            // Load poll options
+            const options = await this.data.getPollOptions(poll.id);
+            
+            // Render poll with options
+            const pollCard = new PollCard({ poll, options });
+            this.updateElement('#poll-container', pollCard.render());
+            
+            console.log(`✅ Rendered poll with ${options.length} options`);
+            
+        } catch (error) {
+            console.error('❌ Error loading polls:', error);
+            this.updateElement('#poll-container', '<div style="color: #c62828; text-align: center; padding: 20px; font-size: 9pt;">Failed to load polls</div>');
         }
     }
     
@@ -687,6 +827,206 @@ export default class extends AbstractView {
             this.addEventListener('[data-action="start-live-stream"]', 'click', () => this.startLiveStream());
             this.addEventListener('[data-action="stop-live-stream"]', 'click', () => this.stopLiveStream());
         }
+    }
+    
+    setupAPIExplorer() {
+        // Set up API Explorer streaming callback
+        APIExplorer.setStreamCallback((entry) => {
+            this.streamAPIResult(entry);
+        });
+        
+        // Set up button handlers
+        this.addEventListener('#explore-basic-btn', 'click', () => {
+            this.showAPIExplorer();
+            APIExplorer.exploreBasicEndpoints();
+        });
+        
+        this.addEventListener('#explore-hidden-btn', 'click', () => {
+            this.showAPIExplorer();
+            APIExplorer.exploreHiddenEndpoints();
+        });
+        
+        this.addEventListener('#explore-firebase-btn', 'click', () => {
+            this.showAPIExplorer();
+            APIExplorer.exploreFirebaseEndpoints();
+        });
+        
+        this.addEventListener('#analyze-patterns-btn', 'click', () => {
+            this.showAPIExplorer();
+            APIExplorer.analyzeResponsePatterns();
+        });
+        
+        this.addEventListener('#explore-functions-btn', 'click', () => {
+            this.showAPIExplorer();
+            APIExplorer.exploreFunctionTypes();
+        });
+        
+        this.addEventListener('#clear-explorer-btn', 'click', () => {
+            this.clearAPIExplorer();
+        });
+        
+        // Add toggle button to debug section
+        const debugSection = this.$('#debug-info');
+        if (debugSection) {
+            const explorerToggle = document.createElement('button');
+            explorerToggle.style.cssText = `
+                margin-top: 10px;
+                padding: 8px 16px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 9pt;
+            `;
+            explorerToggle.textContent = '🔍 Show API Explorer';
+            explorerToggle.addEventListener('click', () => {
+                this.toggleAPIExplorer();
+            });
+            
+            debugSection.appendChild(explorerToggle);
+        }
+    }
+    
+    showAPIExplorer() {
+        const explorer = this.$('#api-explorer');
+        if (explorer) {
+            explorer.style.display = 'block';
+        }
+    }
+    
+    toggleAPIExplorer() {
+        const explorer = this.$('#api-explorer');
+        if (explorer) {
+            const isVisible = explorer.style.display !== 'none';
+            explorer.style.display = isVisible ? 'none' : 'block';
+            
+            // Update toggle button text
+            const debugSection = this.$('#debug-info');
+            const toggleBtn = debugSection?.querySelector('button:last-child');
+            if (toggleBtn) {
+                toggleBtn.textContent = isVisible ? '🔍 Show API Explorer' : '🔍 Hide API Explorer';
+            }
+        }
+    }
+    
+    clearAPIExplorer() {
+        APIExplorer.clearResults();
+        const stream = this.$('#api-stream');
+        if (stream) {
+            stream.innerHTML = '<div style="color: rgba(255,255,255,0.7);">API exploration results will stream here...</div>';
+        }
+    }
+    
+    streamAPIResult(entry) {
+        const stream = this.$('#api-stream');
+        if (!stream) return;
+        
+        // Clear placeholder text on first entry
+        if (stream.children.length === 1 && stream.textContent.includes('will stream here')) {
+            stream.innerHTML = '';
+        }
+        
+        const entryDiv = document.createElement('div');
+        entryDiv.style.cssText = `
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.1);
+            border-left: 3px solid ${this.getTypeColor(entry.type)};
+        `;
+        
+        const timestamp = new Date(entry.timestamp).toLocaleTimeString();
+        const icon = this.getTypeIcon(entry.type);
+        
+        let content = `
+            <div style="font-size: 7pt; color: rgba(255,255,255,0.6); margin-bottom: 2px;">
+                [${timestamp}] ${icon}
+            </div>
+            <div style="margin-bottom: 4px;">
+                ${entry.message}
+            </div>
+        `;
+        
+        if (entry.data) {
+            const dataPreview = this.formatDataPreview(entry.data);
+            content += `
+                <details style="margin-top: 4px;">
+                    <summary style="cursor: pointer; color: rgba(255,255,255,0.8); font-size: 7pt;">
+                        📊 Data (${entry.data.type})
+                    </summary>
+                    <pre style="
+                        margin: 4px 0 0 0;
+                        padding: 6px;
+                        background: rgba(0,0,0,0.3);
+                        border-radius: 2px;
+                        font-size: 7pt;
+                        overflow-x: auto;
+                        white-space: pre-wrap;
+                        color: rgba(255,255,255,0.9);
+                    ">${dataPreview}</pre>
+                </details>
+            `;
+        }
+        
+        entryDiv.innerHTML = content;
+        stream.appendChild(entryDiv);
+        
+        // Auto-scroll to bottom
+        stream.scrollTop = stream.scrollHeight;
+        
+        // Limit entries to prevent memory issues
+        while (stream.children.length > 100) {
+            stream.removeChild(stream.firstChild);
+        }
+    }
+    
+    getTypeColor(type) {
+        const colors = {
+            'start': '#4CAF50',
+            'success': '#2196F3',
+            'discovery': '#FF9800',
+            'request': '#9C27B0',
+            'info': '#607D8B',
+            'error': '#F44336',
+            'warning': '#FF5722'
+        };
+        return colors[type] || '#757575';
+    }
+    
+    getTypeIcon(type) {
+        const icons = {
+            'start': '🚀',
+            'success': '✅',
+            'discovery': '🎯',
+            'request': '📡',
+            'info': 'ℹ️',
+            'error': '❌',
+            'warning': '⚠️'
+        };
+        return icons[type] || '📋';
+    }
+    
+    formatDataPreview(data) {
+        if (!data) return 'null';
+        
+        let preview = `Type: ${data.type}\n`;
+        
+        if (data.structure) {
+            preview += `Structure: ${data.structure}\n`;
+        }
+        
+        if (data.keys && data.keys.length > 0) {
+            preview += `Keys: ${data.keys.slice(0, 10).join(', ')}${data.keys.length > 10 ? '...' : ''}\n`;
+        }
+        
+        if (data.sample) {
+            const sampleStr = JSON.stringify(data.sample, null, 2);
+            const truncated = sampleStr.length > 500 ? sampleStr.substring(0, 500) + '...' : sampleStr;
+            preview += `Sample:\n${truncated}`;
+        }
+        
+        return preview;
     }
     
     // ============ MAX ITEM FEATURES ============
