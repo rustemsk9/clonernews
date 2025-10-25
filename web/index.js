@@ -86,6 +86,7 @@ const router = async() => {
 document.addEventListener("DOMContentLoaded", () => {
     console.log('🚀 ClonerNews starting...');
     router();
+    setupLinkInterception();
 });
 
 // Handle back/forward browser buttons
@@ -94,8 +95,36 @@ window.addEventListener('popstate', router);
 // Handle hash changes for client-side routing
 window.addEventListener('hashchange', router);
 
+// Set up link interception for client-side navigation
+function setupLinkInterception() {
+    document.addEventListener('click', (e) => {
+        // Check if clicked element is a link or inside a link
+        let target = e.target;
+        while (target && target.tagName !== 'A') {
+            target = target.parentNode;
+        }
+        
+        if (!target || target.tagName !== 'A') return;
+        
+        const href = target.getAttribute('href');
+        
+        // Only intercept internal links (not external or mailto, etc.)
+        if (href && 
+            href.startsWith('/') && 
+            !href.startsWith('//') &&
+            !target.hasAttribute('target') &&
+            !target.hasAttribute('download')) {
+            
+            e.preventDefault();
+            console.log('🔗 Navigating to:', href);
+            navigateTo(href);
+        }
+    });
+}
+
 // Export router for programmatic navigation
 window.navigateTo = (path) => {
+    console.log('🧭 Programmatic navigation to:', path);
     window.history.pushState(null, null, path);
     router();
 };

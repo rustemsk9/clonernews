@@ -341,10 +341,34 @@ export default class extends AbstractView {
             
             console.log('✅ Dashboard data loaded:', dashboardData);
             
-            // Render stories
-            this.renderStories(dashboardData.topStories);
+            // Render stories based on current tab
+            switch (this.currentTab) {
+                case 'top':
+                    this.renderStories(dashboardData.topStories);
+                    break;
+                case 'new':
+                    this.renderStories(dashboardData.newStories);
+                    break;
+                case 'best':
+                    this.renderStories(dashboardData.bestStories);
+                    break;
+                case 'ask':
+                    this.renderStories(dashboardData.askStories);
+                    break;
+                case 'show':
+                    this.renderStories(dashboardData.showStories);
+                    break;
+                case 'jobs':
+                    this.renderStories(dashboardData.jobs);
+                    break;
+                default:
+                    this.renderStories(dashboardData.topStories);
+            }
             
-            // Render jobs
+            // Store dashboard data for tab switching
+            this.dashboardData = dashboardData;
+            
+            // Render jobs in sidebar
             this.renderJobs(dashboardData.jobs);
             
             // Render stats
@@ -503,9 +527,44 @@ export default class extends AbstractView {
                 // Load stories for selected tab
                 const tabName = e.target.getAttribute('data-tab');
                 this.currentTab = tabName;
-                await this.loadStories(tabName);
+                
+                // Use cached dashboard data if available, otherwise fetch
+                if (this.dashboardData) {
+                    this.debugLog(`📱 Switching to ${tabName} tab (using cached data)`);
+                    this.renderStoriesFromDashboard(tabName);
+                } else {
+                    await this.loadStories(tabName);
+                }
             });
         });
+    }
+    
+    renderStoriesFromDashboard(tabName) {
+        if (!this.dashboardData) return;
+        
+        const dataMap = {
+            'top': this.dashboardData.topStories,
+            'new': this.dashboardData.newStories,
+            'best': this.dashboardData.bestStories,
+            'ask': this.dashboardData.askStories,
+            'show': this.dashboardData.showStories,
+            'jobs': this.dashboardData.jobs
+        };
+        
+        const stories = dataMap[tabName] || this.dashboardData.topStories;
+        this.renderStories(stories);
+        
+        // Update title
+        const titles = {
+            'top': '📱 Top Stories',
+            'new': '🆕 New Stories',
+            'best': '⭐ Best Stories',
+            'ask': '❓ Ask HN',
+            'show': '🎨 Show HN',
+            'jobs': '💼 Jobs'
+        };
+        
+        this.updateElement('#stories-title', titles[tabName] || '📱 Stories');
     }
     
     setupSearch() {

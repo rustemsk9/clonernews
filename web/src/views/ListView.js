@@ -116,14 +116,19 @@ export default class ListView extends AbstractView {
         try {
             console.log(`📚 Loading page ${this.currentPage + 1} of ${this.type} stories...`);
             
-            // Calculate offset for pagination
-            const offset = this.currentPage * this.storiesPerPage;
+            // For first load, get initial batch
+            // For subsequent loads, get 15 more stories
+            const limit = this.currentPage === 0 ? this.storiesPerPage : 15;
             
             // Fetch stories from DataManager
-            const newStories = await this.data.getStories(this.type, this.storiesPerPage, false, offset);
+            const newStories = await this.data.getStories(this.type, limit * (this.currentPage + 1), false);
+            
+            // Get only the new stories (skip already loaded ones)
+            const startIndex = this.allStories.length;
+            const freshStories = newStories.slice(startIndex);
             
             // Add to our collection
-            this.allStories.push(...newStories);
+            this.allStories.push(...freshStories);
             this.currentPage++;
             
             // Render stories
@@ -132,7 +137,7 @@ export default class ListView extends AbstractView {
             // Update stats
             this.updateStats();
             
-            console.log(`✅ Loaded ${newStories.length} new stories, total: ${this.allStories.length}`);
+            console.log(`✅ Loaded ${freshStories.length} new stories, total: ${this.allStories.length}`);
             
         } catch (error) {
             console.error(`❌ Error loading ${this.type} stories:`, error);
@@ -170,9 +175,46 @@ export default class ListView extends AbstractView {
             const documentHeight = document.documentElement.scrollHeight;
             
             if (scrollPosition >= documentHeight - 200 && !this.loading) {
-                this.loadMoreStories();
+                this.loadMoreStoriesScroll();
             }
         });
+    }
+    
+    // Load 10 more stories on scroll
+    async loadMoreStoriesScroll() {
+        if (this.loading) return;
+        
+        this.loading = true;
+        this.showLoadingIndicator();
+        
+        try {
+            console.log(`📜 Scroll loading 10 more ${this.type} stories...`);
+            
+            // Get 10 more stories
+            const totalNeeded = this.allStories.length + 10;
+            const newStories = await this.data.getStories(this.type, totalNeeded, false);
+            
+            // Get only the new stories (skip already loaded ones)
+            const startIndex = this.allStories.length;
+            const freshStories = newStories.slice(startIndex);
+            
+            // Add to our collection
+            this.allStories.push(...freshStories);
+            
+            // Render stories
+            this.renderAllStories();
+            
+            // Update stats
+            this.updateStats();
+            
+            console.log(`✅ Scroll loaded ${freshStories.length} new stories, total: ${this.allStories.length}`);
+            
+        } catch (error) {
+            console.error(`❌ Error loading stories on scroll:`, error);
+        } finally {
+            this.loading = false;
+            this.hideLoadingIndicator();
+        }
     }
 
     setupLoadMoreButton() {

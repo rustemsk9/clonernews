@@ -315,7 +315,7 @@ class DataManager {
         console.log('📊 Loading dashboard data with Promise.all...');
         
         try {
-            const [topStories, jobs, stats] = await Promise.all([
+            const [topStories, newStories, bestStories, askStories, showStories, jobs, stats] = await Promise.all([
                 this.getStories('top', 7, true),
                 this.getStories('new', 7, true),
                 this.getStories('best', 7, true),
@@ -327,6 +327,10 @@ class DataManager {
             
             return {
                 topStories,
+                newStories,
+                bestStories,
+                askStories,
+                showStories,
                 jobs,
                 stats
             };
@@ -335,8 +339,12 @@ class DataManager {
             
             // Fallback to cached data
             return {
-                topStories: this.getCachedStories('top').slice(0, 10),
-                jobs: this.getCachedStories('jobs').slice(0, 5),
+                topStories: this.getCachedStories('top').slice(0, 7),
+                newStories: this.getCachedStories('new').slice(0, 7),
+                bestStories: this.getCachedStories('best').slice(0, 7),
+                askStories: this.getCachedStories('ask').slice(0, 7),
+                showStories: this.getCachedStories('show').slice(0, 7),
+                jobs: this.getCachedStories('jobs').slice(0, 7),
                 stats: this.getStats()
             };
         }

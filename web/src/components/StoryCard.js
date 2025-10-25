@@ -23,16 +23,22 @@ export default class StoryCard extends Component {
                 ${rank ? `<span class="story-rank">${rank}.</span>` : ''}
                 <div class="story-content">
                     <div class="story-title">
+                        <a href="${storyDetailUrl}">
+                            ${sanitizeHTML(story.title || 'Untitled')}
+                        </a>
+                        ${domain ? `<span class="story-domain">(${domain})</span>` : ''}
                         ${story.url ? `
-                            <a href="${story.url}" target="_blank" rel="noopener noreferrer">
-                                ${sanitizeHTML(story.title || 'Untitled')}
-                            </a>
-                            ${domain ? `<span class="story-domain">(${domain})</span>` : ''}
-                        ` : `
-                            <a href="${storyDetailUrl}">
-                                ${sanitizeHTML(story.title || 'Untitled')}
-                            </a>
-                        `}
+                            <a href="${story.url}" target="_blank" rel="noopener noreferrer" style="
+                                margin-left: 8px;
+                                font-size: 8pt;
+                                color: #666;
+                                text-decoration: none;
+                                border: 1px solid #ddd;
+                                padding: 2px 6px;
+                                border-radius: 3px;
+                                background: #f9f9f9;
+                            ">↗ link</a>
+                        ` : ''}
                     </div>
                     
                     ${showText && story.text ? `
