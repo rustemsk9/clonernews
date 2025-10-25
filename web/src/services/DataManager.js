@@ -316,12 +316,12 @@ class DataManager {
         
         try {
             const [topStories, jobs, stats] = await Promise.all([
-                this.getStories('top', 10, true),
-                this.getStories('new', 5, true),
-                this.getStories('best', 5, true),
-                this.getStories('ask', 5, true),
-                this.getStories('show', 5, true),
-                this.getStories('jobs', 5, true),
+                this.getStories('top', 7, true),
+                this.getStories('new', 7, true),
+                this.getStories('best', 7, true),
+                this.getStories('ask', 7, true),
+                this.getStories('show', 7, true),
+                this.getStories('jobs', 7, true),
                 Promise.resolve(this.getStats())
             ]);
             

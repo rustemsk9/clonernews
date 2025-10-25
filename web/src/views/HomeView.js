@@ -75,30 +75,109 @@ export default class extends AbstractView {
             
             <!-- Freshest Loads Section -->
             <div id="freshest-loads" class="freshest-loads" style="
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                border-radius: 6px;
+                background: #f6f6ef;
+                border: 2px solid #ff6600;
+                border-radius: 8px;
                 padding: 15px;
                 margin: 10px 0;
                 display: none;
             ">
-                <div class="section-header" style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="color: white; margin: 0;">🔥 Freshest Stories (Max ID Discovery)</h2>
-                    <span class="view-more" style="color: rgba(255,255,255,0.8);">Live from HN →</span>
+                <div class="section-header" style="border-bottom: 2px solid #ff6600; padding-bottom: 10px; margin-bottom: 15px;">
+                    <h2 style="color: #333; margin: 0; font-size: 14pt;">🔥 Fresh Stories (Last 10 Minutes)</h2>
+                    <span class="view-more" style="color: #ff6600; font-size: 10pt;">Live from HN →</span>
                 </div>
-                <ul class="story-list" id="freshest-story-list" style="background: rgba(255,255,255,0.1); border-radius: 4px; padding: 10px;">
-                    <li class="story-item loading" style="color: rgba(255,255,255,0.8);">No fresh stories loaded yet</li>
+                <ul class="story-list" id="freshest-story-list" style="
+                    background: white; 
+                    border-radius: 4px; 
+                    padding: 10px; 
+                    max-height: 300px; 
+                    overflow-y: auto;
+                    border: 1px solid #ddd;
+                ">
+                    <li class="story-item loading" style="color: #666;">No fresh stories loaded yet</li>
                 </ul>
             </div>
 
             <!-- Tabs Navigation -->
             <div class="tabs">
-                <div class="tab active" data-tab="top">Top Stories</div>
-                <div class="tab" data-tab="new">New</div>
-                <div class="tab" data-tab="best">Best</div>
-                <div class="tab" data-tab="ask">Ask HN</div>
-                <div class="tab" data-tab="show">Show HN</div>
-                <div class="tab" data-tab="jobs">Jobs</div>
+                <div class="tab active" data-tab="top">
+                    Top Stories
+                    <a href="/top" class="show-all-btn" style="
+                        margin-left: 8px;
+                        font-size: 8pt;
+                        color: #666;
+                        text-decoration: none;
+                        padding: 2px 6px;
+                        border: 1px solid #ddd;
+                        border-radius: 3px;
+                        background: #f9f9f9;
+                    ">Show All</a>
+                </div>
+                <div class="tab" data-tab="new">
+                    New
+                    <a href="/new" class="show-all-btn" style="
+                        margin-left: 8px;
+                        font-size: 8pt;
+                        color: #666;
+                        text-decoration: none;
+                        padding: 2px 6px;
+                        border: 1px solid #ddd;
+                        border-radius: 3px;
+                        background: #f9f9f9;
+                    ">Show All</a>
+                </div>
+                <div class="tab" data-tab="best">
+                    Best
+                    <a href="/best" class="show-all-btn" style="
+                        margin-left: 8px;
+                        font-size: 8pt;
+                        color: #666;
+                        text-decoration: none;
+                        padding: 2px 6px;
+                        border: 1px solid #ddd;
+                        border-radius: 3px;
+                        background: #f9f9f9;
+                    ">Show All</a>
+                </div>
+                <div class="tab" data-tab="ask">
+                    Ask HN
+                    <a href="/ask" class="show-all-btn" style="
+                        margin-left: 8px;
+                        font-size: 8pt;
+                        color: #666;
+                        text-decoration: none;
+                        padding: 2px 6px;
+                        border: 1px solid #ddd;
+                        border-radius: 3px;
+                        background: #f9f9f9;
+                    ">Show All</a>
+                </div>
+                <div class="tab" data-tab="show">
+                    Show HN
+                    <a href="/show" class="show-all-btn" style="
+                        margin-left: 8px;
+                        font-size: 8pt;
+                        color: #666;
+                        text-decoration: none;
+                        padding: 2px 6px;
+                        border: 1px solid #ddd;
+                        border-radius: 3px;
+                        background: #f9f9f9;
+                    ">Show All</a>
+                </div>
+                <div class="tab" data-tab="jobs">
+                    Jobs
+                    <a href="/jobs" class="show-all-btn" style="
+                        margin-left: 8px;
+                        font-size: 8pt;
+                        color: #666;
+                        text-decoration: none;
+                        padding: 2px 6px;
+                        border: 1px solid #ddd;
+                        border-radius: 3px;
+                        background: #f9f9f9;
+                    ">Show All</a>
+                </div>
             </div>
 
             <!-- Main Content Grid -->
@@ -373,7 +452,7 @@ export default class extends AbstractView {
         const storiesHTML = stories.map((story, index) => {
             console.log('🔍 DEBUG - Processing story:', story);
             // Create a new StoryCard instance with props for each story
-            const storyCard = new StoryCard({ story, rank: index + 1 });
+            const storyCard = new StoryCard({ story, rank: index + 1, section: this.currentTab });
             return storyCard.render();
         }).join('');
         
@@ -722,18 +801,31 @@ export default class extends AbstractView {
     
     renderFreshestStories(stories) {
         if (!stories || stories.length === 0) {
-            this.updateElement('#freshest-story-list', '<li class="story-item" style="color: rgba(255,255,255,0.8);">No fresh stories found</li>');
+            this.updateElement('#freshest-story-list', '<li class="story-item" style="color: #666;">No fresh stories found</li>');
             return;
         }
         
-        const storiesHTML = stories.map((story, index) => {
+        // Filter stories to only show items from last 10 minutes
+        const tenMinutesAgo = Math.floor(Date.now() / 1000) - (10 * 60); // 10 minutes in seconds
+        const recentStories = stories.filter(story => {
+            return story.time && story.time > tenMinutesAgo;
+        });
+        
+        this.debugLog(`🕒 Filtered to ${recentStories.length} stories from last 10 minutes (from ${stories.length} total)`);
+        
+        if (recentStories.length === 0) {
+            this.updateElement('#freshest-story-list', '<li class="story-item" style="color: #666;">No stories from last 10 minutes</li>');
+            return;
+        }
+        
+        const storiesHTML = recentStories.map((story, index) => {
             // Create a new StoryCard instance with props for each story
-            const storyCard = new StoryCard({ story, rank: index + 1 });
+            const storyCard = new StoryCard({ story, rank: index + 1, section: 'new' });
             return storyCard.render();
         }).join('');
         
         this.updateElement('#freshest-story-list', storiesHTML);
-        this.debugLog(`🎨 Rendered ${stories.length} fresh stories in dedicated section`);
+        this.debugLog(`🎨 Rendered ${recentStories.length} fresh stories (last 10 min) in dedicated section`);
     }
     
     debugLog(message, data = null) {

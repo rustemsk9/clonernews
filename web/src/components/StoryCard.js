@@ -4,7 +4,7 @@ import { formatDate, extractDomain, sanitizeHTML } from '../utils/helpers.js';
 
 export default class StoryCard extends Component {
     render() {
-        const { story, rank, showText = false } = this.props;
+        const { story, rank, showText = false, section = 'item' } = this.props;
         
         if (!story) {
             return '';
@@ -14,6 +14,9 @@ export default class StoryCard extends Component {
         const timeAgo = formatDate(story.time);
         const commentCount = story.descendants || 0;
         const score = story.score || 0;
+        
+        // Create story detail URL based on section
+        const storyDetailUrl = `/${section}/${story.id}`;
         
         return `
             <li class="story-item" data-id="${story.id}">
@@ -26,7 +29,7 @@ export default class StoryCard extends Component {
                             </a>
                             ${domain ? `<span class="story-domain">(${domain})</span>` : ''}
                         ` : `
-                            <a href="#/item/${story.id}">
+                            <a href="${storyDetailUrl}">
                                 ${sanitizeHTML(story.title || 'Untitled')}
                             </a>
                         `}
@@ -45,9 +48,9 @@ export default class StoryCard extends Component {
                     
                     <div class="story-meta">
                         <span>${score} point${score !== 1 ? 's' : ''}</span>
-                        <span>by <a href="#/user/${story.by}">${story.by || 'unknown'}</a></span>
-                        <span><a href="#/item/${story.id}">${timeAgo}</a></span>
-                        <span><a href="#/item/${story.id}">${commentCount} comment${commentCount !== 1 ? 's' : ''}</a></span>
+                        <span>by <a href="/user/${story.by}">${story.by || 'unknown'}</a></span>
+                        <span><a href="${storyDetailUrl}">${timeAgo}</a></span>
+                        <span><a href="${storyDetailUrl}">${commentCount} comment${commentCount !== 1 ? 's' : ''}</a></span>
                     </div>
                 </div>
             </li>
